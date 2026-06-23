@@ -1069,7 +1069,18 @@ function showReading() {
   });
 
   // ===== 最终总结解读 =====
-  const synthesis = buildFinalSummary();
+  let synthesis;
+  try {
+    synthesis = buildFinalSummary();
+  } catch (e) {
+    console.error('buildFinalSummary error:', e);
+    synthesis = {
+      overview: '解读引擎遇到意外错误，请重试。',
+      narrative: '错误详情：' + e.message,
+      actions: '请刷新页面后重新占卜。',
+      closing: '抱歉给您带来不便。'
+    };
+  }
   html += `
     <div style="margin-top:28px; padding:24px; background:linear-gradient(135deg, rgba(185,142,255,.06) 0%, rgba(232,93,117,.04) 100%); border:1px solid rgba(185,142,255,.12); border-radius:var(--radius);">
       <h3 style="color:var(--purple);font-size:1.1rem;margin-bottom:16px;">📋 最终总结解读</h3>
@@ -1336,7 +1347,7 @@ function buildFinalSummary() {
     overview += `${majorNames} ${majors.length>1?'联手':'单独'}向你传达了超越个人意识的智慧。`;
   } else if (majorRatio === 0) {
     overview += `<br><br>全为小阿卡纳，说明焦点在日常实践层面——`;
-    if (dominantSuit) overview += `其中<span class="reading-highlight">「${suitMap[dominantSuit[0]]}」花色最为突出</span>，围绕${EL_DESC[Object.keys(suitMap).find(k=>suitMap[k]===suitMap[dominantSuit[0]])]?.trait||'相关'}议题展开。`;
+    if (dominantSuit) { const sEl = {wands:'火',cups:'水',swords:'风',pentacles:'土'}[dominantSuit[0]]||'火'; overview += `其中<span class="reading-highlight">「${suitMap[dominantSuit[0]]}」花色最为突出</span>，围绕${EL_DESC[sEl]?.trait||'相关'}议题展开。`; }
     overview += `处理好眼前的具体事务，就是此刻最好的修行。`;
   }
 
