@@ -1066,11 +1066,37 @@ function showReading() {
       </div>`;
   });
 
-  // Synthesis
+  // ===== 最终总结解读 =====
+  const synthesis = buildFinalSummary();
   html += `
-    <div style="margin-top:20px; padding:16px; background:rgba(232,93,117,.06); border-radius:var(--radius);">
-      <p class="reading-text" style="color:var(--accent);font-weight:600;margin-bottom:4px;">💡 综合提示</p>
-      <p class="reading-text">${getSynthesis()}</p>
+    <div style="margin-top:28px; padding:24px; background:linear-gradient(135deg, rgba(185,142,255,.06) 0%, rgba(232,93,117,.04) 100%); border:1px solid rgba(185,142,255,.12); border-radius:var(--radius);">
+      <h3 style="color:var(--purple);font-size:1.1rem;margin-bottom:16px;">📋 最终总结解读</h3>
+
+      <div style="margin-bottom:18px;">
+        <p class="reading-text" style="color:var(--text);font-size:.95rem;line-height:2;">
+          ${synthesis.overview}
+        </p>
+      </div>
+
+      <div style="margin-bottom:18px; padding:16px; background:rgba(185,142,255,.04); border-radius:8px;">
+        <p class="reading-text" style="color:var(--purple);font-weight:600;margin-bottom:8px;font-size:.9rem;">🔗 牌面联动分析</p>
+        <p class="reading-text" style="color:var(--text-dim);font-size:.9rem;line-height:2;">
+          ${synthesis.narrative}
+        </p>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <p class="reading-text" style="color:var(--accent);font-weight:600;margin-bottom:8px;font-size:.9rem;">🎯 关键行动建议</p>
+        <p class="reading-text" style="color:var(--text-dim);font-size:.9rem;line-height:2;">
+          ${synthesis.actions}
+        </p>
+      </div>
+
+      <div style="padding:14px; background:rgba(232,93,117,.05); border-left:3px solid var(--accent); border-radius:0 8px 8px 0;">
+        <p class="reading-text" style="color:var(--text);font-size:.9rem;line-height:2;font-style:italic;">
+          ${synthesis.closing}
+        </p>
+      </div>
     </div>`;
 
   panel.innerHTML = html;
@@ -1097,37 +1123,222 @@ function getPositionAdvice(spread, idx, card) {
   return '让这张牌的能量与你正在探索的问题产生共鸣。';
 }
 
-function getSynthesis() {
-  const sc = SCENARIOS.find(s => s.id === state.scenario);
+function getSynthesis() { return ''; } // replaced by buildFinalSummary()
+
+// ==================== FINAL SUMMARY ENGINE ====================
+function buildFinalSummary() {
+  const cards = state.cards;
   const sp = SPREADS[state.spread];
-  const majorCount = state.cards.filter(c => c.type === 'major').length;
-  const revCount = state.cards.filter(c => c.reversed).length;
-  const totalCards = state.cards.length;
+  const sc = SCENARIOS.find(s => s.id === state.scenario);
 
-  let tips = [];
+  // --- Element distribution ---
+  const elCount = { '火':0, '水':0, '风':0, '土':0 };
+  cards.forEach(c => { if (elCount[c.el] !== undefined) elCount[c.el]++; });
+  const dominantEl = Object.entries(elCount).sort((a,b) => b[1]-a[1])[0];
+  const secondEl = Object.entries(elCount).sort((a,b) => b[1]-a[1])[1];
 
-  if (majorCount >= Math.ceil(totalCards/2)) {
-    tips.push('大阿卡纳占比较高，说明当前问题对你而言是人生重要课题，值得认真对待。');
-  } else if (majorCount === 0) {
-    tips.push('全为小阿卡纳——日常层面的能量流动，不需要过度放大焦虑，从小处着手即可。');
-  }
+  // --- Major/Minor ---
+  const majors = cards.filter(c => c.type === 'major');
+  const minors = cards.filter(c => c.type === 'minor');
+  const majorRatio = majors.length / cards.length;
 
-  if (revCount > totalCards/2) {
-    tips.push('逆位牌较多，提示当前存在较多内在阻力或需要重新审视的观念。不妨暂停外在行动，先做内在整理。');
-  }
+  // --- Reversal ---
+  const revCount = cards.filter(c => c.reversed).length;
+  const revRatio = revCount / cards.length;
 
-  // Scenario-specific tips
-  const tipsByScenario = {
-    life: '人生方向的探索是一条长路——牌阵给出的不是地图，而是指南针。信任自己的步伐。',
-    love: '关系中最重要的不是找到"对的人"，而是成为"对的人"。牌面映照的是互动的模式。',
-    career: '事业选择没有完美的答案，只有当下最适合的方向。关注牌中提示的资源和障碍。',
-    money: '物质的本质是能量的流动。牌的提示不是让你贪求或恐惧，而是帮你看到自己的金钱信念。',
-    spirit: '灵性成长不是逃避现实，而是更深入地活在当下。牌面的象征是你内心的映射。',
-    health: '身心健康是身心灵的整体平衡。牌的提示不能替代专业医疗建议——请把解读作为觉察的起点。'
+  // --- Suit keyword ---
+  const suitMap = { wands:'权杖', cups:'圣杯', swords:'宝剑', pentacles:'星币' };
+  const suitCount = {};
+  minors.forEach(c => { const k = c.suit; if (k) suitCount[k] = (suitCount[k]||0)+1; });
+  const dominantSuit = Object.entries(suitCount).sort((a,b) => b[1]-a[1])[0];
+
+  // --- Element meanings ---
+  const elMeanings = {
+    '火': '火元素（权杖）旺盛，你的行动力和激情是当下的主导力量。内心有强烈的冲动想要去做、去改变、去创造。',
+    '水': '水元素（圣杯）充沛，情感和直觉是当下的主旋律。内心世界波澜起伏，关系与感受需要被优先关注。',
+    '风': '风元素（宝剑）占主导，思维和沟通是核心课题。你可能在反复思量、分析权衡，头脑中上演着对话与辩论。',
+    '土': '土元素（星币）突出，务实和安全感是当下的基调。你更关注实际的成果、物质的稳定和脚踏实地的进展。'
   };
-  tips.push(tipsByScenario[state.scenario] || '');
 
-  return tips.join(' ');
+  // ===== 1. OVERVIEW =====
+  let overview = '';
+  const scName = sc ? sc.name : '你的问题';
+
+  // Opening
+  overview += `本次占卜聚焦于<span class="reading-highlight">「${scName}」</span>，`;
+
+  // Energy assessment
+  if (dominantEl[1] >= secondEl[1] + 2) {
+    overview += elMeanings[dominantEl[0]] + ' ';
+  } else if (dominantEl[1] === secondEl[1] && dominantEl[1] > 0) {
+    overview += `${dominantEl[0]}元素与${secondEl[0]}元素并重，提示你在行动与感受之间需要寻找平衡——既要有向前的动力，也要有向内的觉察。`;
+  } else {
+    overview += `各元素能量相对均衡，说明当前生活各领域都在协调运作，没有单一维度严重失衡。`;
+  }
+
+  // Major Arcana significance
+  if (majorRatio >= 0.5) {
+    overview += `<br><br>牌阵中<span class="reading-highlight">大阿卡纳占比 ${Math.round(majorRatio*100)}%</span>，`;
+    if (majors.some(c => c.name === '高塔' || c.name === '死神')) {
+      overview += `并且出现了具有强烈转变意味的主牌——</span>这绝非小事，当前的经历正在塑造你人生的一个重要章节。`;
+    } else if (majors.some(c => c.name === '太阳' || c.name === '世界' || c.name === '星星')) {
+      overview += `且出现了极具祝福意味的主牌——这是宇宙在告诉你，你正走在正确的道路上。`;
+    } else {
+      overview += `说明当前议题对你而言不是过眼云烟，而是一个值得深入对待的人生课题。命运之手正在推动一些重要的事情发生。`;
+    }
+  } else if (majorRatio === 0) {
+    overview += `<br><br>全为小阿卡纳，提示当前能量的焦点在日常层面——`;
+    if (dominantSuit) {
+      overview += `<span class="reading-highlight">「${suitMap[dominantSuit[0]]}」</span>花色尤为突出，`;
+    }
+    overview += `从小处着手、处理好眼前的具体事务，比纠结于宏大命题更有意义。`;
+  }
+
+  // Reversal insight
+  if (revRatio > 0.5) {
+    overview += `<br><br>超过半数牌以逆位呈现（${revCount}/${cards.length}），提示当前存在<span class="reading-highlight">内在的拉扯与阻力</span>——能量不是向外流动而是向内回旋。这并非坏事，而是邀请你停下来重新审视：哪些观念需要被翻转？哪些执念需要被放下？`;
+  } else if (revRatio > 0 && revRatio <= 0.3) {
+    overview += `<br><br>大部分牌呈正位，整体能量顺畅。少数逆位牌指出了需要你额外留意的<span class="reading-highlight">卡点和盲区</span>。`;
+  }
+
+  // ===== 2. NARRATIVE (card interaction) =====
+  let narrative = '';
+  if (sp === SPREADS.triple) {
+    // Past → Present → Future flow
+    const [past, now, future] = cards;
+    const pastUpright = !past.reversed, nowUpright = !now.reversed, futureUpright = !future.reversed;
+
+    narrative += `从<span style="color:var(--purple);">过去</span>的「${past.name}」（${pastUpright?'正位':'逆位'}）`;
+    narrative += `走向<span style="color:var(--purple);">现在</span>的「${now.name}」（${nowUpright?'正位':'逆位'}）`;
+
+    if (pastUpright && nowUpright) {
+      narrative += `——过去的积累为当下奠定了良好基础，两股正向能量衔接顺畅，你正处在一个顺势而为的阶段。`;
+    } else if (!pastUpright && nowUpright) {
+      narrative += `——虽然过去存在坎坷和阻力，但你已经走出了那个阶段，现在的能量正在好转。过去的教训成为了今日的智慧。`;
+    } else if (pastUpright && !nowUpright) {
+      narrative += `——过去的顺遂让你习惯了某种模式，但当前出现了需要你重新审视的信号。逆位的「${now.name}」不是否定，而是提醒：旧的方法可能不再适用。`;
+    } else {
+      narrative += `——两段能量都处于调整期，提示你正经历一个内在转型的过程。这不是低谷，而是蜕变的前奏。`;
+    }
+
+    narrative += `<br><br>展望<span style="color:var(--purple);">未来</span>——「${future.name}」（${futureUpright?'正位':'逆位'}）」`;
+    if (futureUpright) {
+      narrative += `预示着一个积极的发展方向。当下「${now.name}」的能量如果被善用，将自然导向「${future.name}」的成果。`;
+    } else {
+      narrative += `提示了潜在的风险或需要调整的方向。现在修正「${now.name}」中的模式，就能改写未来的走向——塔罗从不预言不可更改的命运。`;
+    }
+  } else if (sp === SPREADS.relation) {
+    // Relationship spread - compare both sides
+    const youCards = cards.slice(0,3), themCards = cards.slice(3,6), outcome = cards[6];
+    const youRevs = youCards.filter(c=>c.reversed).length;
+    const themRevs = themCards.filter(c=>c.reversed).length;
+
+    narrative += `你这一侧，`;
+    narrative += `感受层是「${youCards[0].name}」、想法层是「${youCards[1].name}」、行为层是「${youCards[2].name}」。`;
+    if (youRevs >= 2) narrative += `你的能量有较多内在纠结，感受与行为之间可能存在不一致——心里想的和实际做的有差距。`;
+    else if (youRevs === 1) narrative += `你的能量大体清晰，但有一处需要梳理的卡点。`;
+    else narrative += `你的能量清晰流畅，内在感受与外在表达一致。`;
+
+    narrative += `<br><br>对方一侧，`;
+    narrative += `感受层是「${themCards[0].name}」、想法层是「${themCards[1].name}」、行为层是「${themCards[2].name}」。`;
+    if (themRevs >= 2) narrative += `对方的能量也存在较多波动和不确定性，可能尚未理清自己的位置。`;
+    else if (themRevs === 1) narrative += `对方的能量大致明确，只有一个层面需要进一步观察。`;
+    else narrative += `对方的能量状态较为明朗。`;
+
+    narrative += `<br><br>两方对比：`;
+    if (youRevs > themRevs) narrative += `你的内在波动比对方更多，建议先稳定自己的内心，不急于在关系中求解。`;
+    else if (themRevs > youRevs) narrative += `对方似乎比你更不确定——给对方一些空间，让答案自然浮现。`;
+    else narrative += `两人的能量状态相似，都在同一频道上，这有助于相互理解和共振。`;
+
+    narrative += `<br><br>关系走向「${outcome.name}」（${outcome.reversed?'逆位':'正位'}）——`;
+    if (!outcome.reversed) {
+      narrative += `整体趋势向好，但关系的质量取决于两人当下的真实投入，而非牌面的承诺。`;
+    } else {
+      narrative += `提示关系中存在需要正视的问题。逆位不是"坏结局"，而是邀请你们面对一直回避的议题。`;
+    }
+  } else if (sp === SPREADS.star) {
+    // Star spread - connect core to outcome
+    const core = cards[0], challenge = cards[1], root = cards[2];
+    const vision = cards[3], past = cards[4], near = cards[5], outcome = cards[6];
+
+    narrative += `核心问题由<span class="reading-highlight">「${core.name}」</span>定义`;
+    narrative += `（${core.reversed?'逆位提示你需要向内审视这个议题的本源':'正位表明你已经清晰地看到了问题的本质'}）。`;
+
+    narrative += `<br><br>挑战层的「${challenge.name}」${challenge.reversed?'以逆位出现，说明阻力可能来自内在的恐惧而非外在的困难':'提示这是你必须正面应对的成长关卡'}。`;
+    narrative += `而根基层的「${root.name}」揭示了潜在的驱动力——${root.reversed?'某些未被意识到的模式正在暗中影响你的判断':'你可以清晰地追溯到问题的源头，这是宝贵的觉察'}。`;
+
+    narrative += `<br><br>从<span style="color:var(--purple);">远景</span>「${vision.name}」到<span style="color:var(--purple);">近期未来</span>「${near.name}」，再到<span style="color:var(--purple);">最终结果</span>「${outcome.name}」——`;
+    if (!outcome.reversed) {
+      narrative += `这条路径指向一个值得期待的方向，但需要你主动跨越「${challenge.name}」所代表的障碍。`;
+    } else {
+      narrative += `结果牌以逆位呈现，提醒你某些假设可能需要被重新检验。回到核心牌「${core.name}」——你对问题的定义是否准确？换个角度思考，答案会不同。`;
+    }
+  } else {
+    // Single card spread
+    const card = cards[0];
+    narrative += `今天的核心启示来自<span class="reading-highlight">「${card.name}」</span>`;
+    narrative += `（${card.reversed?'逆位':'正位'}）——`;
+    if (card.type === 'major') {
+      narrative += `作为大阿卡纳，这张牌携带了强大的原型能量。`;
+    } else {
+      const sData = MINOR_ARCANA[card.suit];
+      narrative += `属于${sData.suit}牌组（${sData.el}元素），触及${sData.domain}的领域。`;
+    }
+    narrative += `${card.reversed ? '逆位邀请你向内看——这份能量被什么阻挡了？' : '正位鼓励你拥抱这份能量，让它引领你前行。'}`;
+  }
+
+  // ===== 3. ACTIONS =====
+  let actions = '';
+  const actionPool = [];
+
+  // Element-based
+  if (dominantEl[0] === '火') {
+    actionPool.push('🔥 行动力旺盛的时期，但要避免冲动。行动前问自己：这出于热情还是焦虑？');
+    actionPool.push('🔥 将多余的火能量用于运动或创造性项目，让火焰有出口而非内耗。');
+  } else if (dominantEl[0] === '水') {
+    actionPool.push('💧 允许情绪流淌，但不被情绪淹没。写日记或与信任的人交谈有助于梳理感受。');
+    actionPool.push('💧 直觉此刻非常敏锐——留意梦、巧合和内心的"第一反应"。');
+  } else if (dominantEl[0] === '风') {
+    actionPool.push('🍃 思维活跃时容易过度分析。本周设定一个"停止思考、开始行动"的截止时间。');
+    actionPool.push('🍃 注意言语的力量——你想说的话，是真的需要说，还是仅仅想要赢？');
+  } else if (dominantEl[0] === '土') {
+    actionPool.push('🪨 稳扎稳打是你的优势，但别让"求稳"变成"不动"。给自己设定一个小的行动目标。');
+    actionPool.push('🪨 关注身体健康和财务细节——这是打好地基的时期，每一步都算数。');
+  }
+
+  // Reversal-based
+  if (revRatio > 0.4) {
+    actionPool.push('🔄 逆位牌较多时，建议减少外在行动，增加内在整理。冥想、散步、自由书写都是好工具。');
+  }
+  if (revRatio === 0) {
+    actionPool.push('✨ 全正位——能量通畅，是行动的好时机。但仍需谨慎决策，正位不代表"自动成功"。');
+  }
+
+  // Scenario-based
+  const scActions = {
+    life: '🧭 本周做一件"愚者"式的小冒险：走一条新路、学一样新东西、对未知保持好奇。',
+    love: '💔 如果你在关系中——这周专注倾听而非表达。如果你在寻找——先成为你希望吸引的那个人。',
+    career: '💼 列出三个你真正擅长且享受的事情，然后看看它们是否与当前的工作方向一致。',
+    money: '💰 做一次"金钱信念检查"——你对钱的真实感受是什么？丰盈的还是匮乏的？这些信念来自哪里？',
+    spirit: '🧘 每天留出10分钟的沉默时间——没有手机、没有任务、没有目的。只是存在。',
+    health: '🏥 身体是心灵的镜子——注意最近反复出现的身体小信号，它们在诉说什么？'
+  };
+  actionPool.push(scActions[state.scenario] || '');
+
+  // Pick 3-4 most relevant actions
+  const selected = actionPool.filter(Boolean).slice(0, 4);
+  actions = selected.map((a, i) => `${i+1}. ${a}`).join('<br>');
+
+  // ===== 4. CLOSING =====
+  const closings = [
+    '✨ 塔罗牌是一面镜子，映照出你早已知道却尚未承认的真相。最终的决策权永远在你手中。保持开放，保持觉察，相信自己的内在智慧。',
+    '🌙 无论牌面揭示了什么——光明或阴影、顺遂或挑战——它们都是你生命旅程的一部分。真正的占卜不是预知未来，而是被未来提问：你准备好了吗？',
+    '🌟 每一张牌都是一扇门，通向一个可能的视角。今天你打开了几扇？明天你将选择走进哪一扇？答案不在牌中，在你走向答案的路上。',
+    '💫 感谢你花时间与自己对话。在这个向外追逐的世界里，愿意向内看的人，已经走出了最重要的一步。'
+  ];
+  const closing = closings[Math.floor(Math.random() * closings.length)];
+
+  return { overview, narrative, actions, closing };
 }
 
 function resetDraw() {
