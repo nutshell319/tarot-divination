@@ -1625,7 +1625,7 @@ function buildFinalSummary() {
     '🌟 每一张牌都是一扇门，通向一种可能的视角。今天你站在哪扇门前？明天你选择推开哪一扇？答案不在牌中——在你走向答案的脚步中。',
     '💫 占卜的真正意义不在于预测未来，而在于让你在此时此刻，更加清醒地面对自己。你已经迈出了最重要的一步：向内看的勇气。'
   ];
-  const closing = closings[(totalNum + revCount) % closings.length]; // 用牌面数据选一个，而非每次随机
+  const closing = closings[(totalNum + reversals.length) % closings.length];
 
   return { overview, narrative, actions, closing };
 }
