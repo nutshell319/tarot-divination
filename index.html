@@ -934,6 +934,7 @@ function startDraw() {
     `已选择：${sp.name}（${sp.cards} 张牌）。点击"洗牌"开始。`;
 
   document.getElementById('btnShuffle').style.display = '';
+  document.getElementById('btnShuffle').disabled = false;
   document.getElementById('btnDraw').style.display = 'none';
   document.getElementById('btnRevealAll').style.display = 'none';
   document.getElementById('spreadDisplay').innerHTML = '';
