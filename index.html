@@ -35,6 +35,19 @@ body::before {
     repeating-linear-gradient(90deg,transparent,transparent 49px,rgba(255,255,255,.02) 50px);
 }
 
+/* ========== Background Fool Silhouette ========== */
+.bg-fool {
+  position:fixed; z-index:0; pointer-events:none;
+  bottom:0; left:50%; transform:translateX(-50%);
+  width:min(400px, 88vw); height:min(560px, 72vh);
+  opacity:0.035; filter:blur(.5px);
+  animation: foolBreathe 8s ease-in-out infinite;
+}
+@keyframes foolBreathe {
+  0%, 100% { opacity:0.025; }
+  50% { opacity:0.055; }
+}
+
 /* ========== App Container ========== */
 .app-container {
   position:relative; z-index:1;
@@ -367,6 +380,95 @@ body::before {
 </style>
 </head>
 <body>
+
+<!-- Background: Ghostly Fool Silhouette -->
+<svg class="bg-fool" viewBox="0 0 400 520" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="1.5"/>
+    </filter>
+  </defs>
+  <!-- Cliff edge -->
+  <path d="M0 500 L95 485 L180 480 L270 488 L400 502 L400 520 L0 520Z" fill="white" opacity="0.55"/>
+  <!-- Distant mountains -->
+  <path d="M0 500 L70 462 L150 478 L230 457 L300 472 L400 502 L400 520 L0 520Z" fill="white" opacity="0.15"/>
+  <!-- Sun -->
+  <circle cx="305" cy="82" r="44" fill="none" stroke="white" stroke-width="1.2" opacity="0.4"/>
+  <circle cx="305" cy="82" r="36" fill="white" opacity="0.12" filter="url(#glow)"/>
+  <circle cx="305" cy="82" r="26" fill="white" opacity="0.08"/>
+  <!-- Sun rays -->
+  <line x1="305" y1="30"  x2="305" y2="20"  stroke="white" stroke-width="1" opacity="0.25"/>
+  <line x1="305" y1="134" x2="305" y2="144" stroke="white" stroke-width="1" opacity="0.25"/>
+  <line x1="253" y1="82"  x2="243" y2="82"  stroke="white" stroke-width="1" opacity="0.25"/>
+  <line x1="357" y1="82"  x2="367" y2="82"  stroke="white" stroke-width="1" opacity="0.25"/>
+  <line x1="270" y1="47"  x2="262" y2="40"  stroke="white" stroke-width="1" opacity="0.2"/>
+  <line x1="340" y1="117" x2="348" y2="124" stroke="white" stroke-width="1" opacity="0.2"/>
+  <line x1="340" y1="47"  x2="348" y2="40"  stroke="white" stroke-width="1" opacity="0.2"/>
+  <line x1="270" y1="117" x2="262" y2="124" stroke="white" stroke-width="1" opacity="0.2"/>
+  <!-- Stars -->
+  <g fill="white">
+    <circle cx="50" cy="55" r="2" opacity="0.55"/>
+    <circle cx="118" cy="32" r="1.5" opacity="0.4"/>
+    <circle cx="238" cy="44" r="2.2" opacity="0.48"/>
+    <circle cx="350" cy="172" r="1.5" opacity="0.32"/>
+    <circle cx="72" cy="155" r="1.8" opacity="0.42"/>
+    <circle cx="168" cy="88" r="2" opacity="0.38"/>
+    <circle cx="282" cy="24" r="1.3" opacity="0.5"/>
+    <circle cx="38" cy="215" r="1.5" opacity="0.3"/>
+    <circle cx="258" cy="128" r="1.2" opacity="0.36"/>
+    <circle cx="95" cy="260" r="1.4" opacity="0.28"/>
+    <circle cx="195" cy="42" r="1.6" opacity="0.4"/>
+    <circle cx="148" cy="135" r="1" opacity="0.35"/>
+  </g>
+  <!-- === THE FOOL FIGURE === -->
+  <!-- Left leg (back, straight) -->
+  <path d="M172 248 L166 390 L163 442" stroke="white" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <!-- Right leg (stepping forward) -->
+  <path d="M192 248 Q212 330 218 395 Q220 425 225 448" stroke="white" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <!-- Body / tunic -->
+  <path d="M166 168 Q163 160 178 157 Q192 160 192 170 L197 240 Q200 253 190 252 L172 250 Q165 248 166 168Z" fill="white"/>
+  <!-- Tunic belt/sash -->
+  <path d="M167 210 Q180 215 196 212" stroke="white" stroke-width="1.5" fill="none" opacity="0.6"/>
+  <!-- Head -->
+  <circle cx="178" cy="140" r="15" fill="white"/>
+  <!-- Hair tuft -->
+  <path d="M166 134 Q163 128 167 126 Q170 125 172 129" fill="white"/>
+  <!-- Hat brim -->
+  <ellipse cx="178" cy="130" rx="30" ry="4.5" fill="white"/>
+  <!-- Hat crown (slightly tilted) -->
+  <path d="M163 130 Q172 100 186 105 Q192 108 193 130Z" fill="white"/>
+  <!-- Feather -->
+  <path d="M188 108 Q198 90 205 92 Q198 98 194 104" stroke="white" stroke-width="1.5" fill="none" opacity="0.65"/>
+  <!-- Left arm (extended forward holding a rose) -->
+  <path d="M170 183 Q140 176 116 168" stroke="white" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <!-- Rose -->
+  <circle cx="112" cy="166" r="4.5" fill="white" opacity="0.7"/>
+  <circle cx="112" cy="166" r="2.5" fill="white"/>
+  <!-- Right arm (holding stick over shoulder) -->
+  <path d="M192 182 Q215 178 230 170" stroke="white" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <!-- Staff / stick over shoulder -->
+  <line x1="170" y1="170" x2="232" y2="135" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Bundle tied to staff -->
+  <circle cx="168" cy="172" r="10" fill="white" opacity="0.65"/>
+  <circle cx="168" cy="172" r="6" fill="white" opacity="0.4"/>
+  <path d="M160 169 Q168 165 176 169" stroke="white" stroke-width="1.2" fill="none" opacity="0.5"/>
+  <!-- === DOG === -->
+  <!-- Dog body -->
+  <ellipse cx="188" cy="458" rx="18" ry="7" fill="white" opacity="0.75"/>
+  <!-- Dog head (looking up at the Fool) -->
+  <circle cx="170" cy="452" r="5.5" fill="white"/>
+  <!-- Dog snout -->
+  <ellipse cx="165" cy="453" rx="2.5" ry="1.8" fill="white" opacity="0.7"/>
+  <!-- Dog ear -->
+  <path d="M169 447 L166 440 L172 444Z" fill="white"/>
+  <!-- Dog legs -->
+  <line x1="178" y1="463" x2="175" y2="473" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="186" y1="463" x2="189" y2="473" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="182" y1="463" x2="180" y2="473" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+  <line x1="192" y1="463" x2="195" y2="473" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+  <!-- Dog tail -->
+  <path d="M203 454 Q212 448 210 436" stroke="white" stroke-width="2" fill="none" opacity="0.7"/>
+</svg>
 
 <div class="app-container" id="app">
 
